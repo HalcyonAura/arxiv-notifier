@@ -41,13 +41,13 @@ async def wait_until_time(hour=9, minute=0, second=0):
 
 async def check_and_notify(hour, minute) -> None:
     """Check for new articles and notify"""
-    # Function to check and notify new articles
-    articles = fetch_arxiv_articles('hackathons')
-    #articles = [{'id': '1', 'title': 'Hackathons', 'summary': 'Hackathons are fun', 'link': 'https://arxiv.org'}] # sample article while waiting for enough time to pass due to arxiv query rates
     notifier = DesktopNotifier(app_name="Sample App")
     stop_event = asyncio.Event()
 
     await wait_until_time(hour,minute)  # Wait until [time] before proceeding
+     # Function to check and notify new articles
+    articles = fetch_arxiv_articles('hackathons')
+    #articles = [{'id': '1', 'title': 'Hackathons', 'summary': 'Hackathons are fun', 'link': 'https://arxiv.org'}] # sample article while waiting for enough time to pass due to arxiv query rates
 
     for article in articles:
         await notifier.send(
@@ -76,7 +76,7 @@ async def check_and_notify(hour, minute) -> None:
 
 if __name__ == "__main__":
     try:
-        asyncio.run(check_and_notify(16, 39))
+        asyncio.run(check_and_notify(14, 28))
     except KeyboardInterrupt:
         # Handle KeyboardInterrupt gracefully on Windows.
         pass

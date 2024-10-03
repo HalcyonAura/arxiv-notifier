@@ -3,10 +3,3 @@ desktop-notifier==6.0.0
 feedparser==6.0.11
 packaging==24.1
 sgmllib3k==1.0.0
-winrt-runtime==2.2.0
-winrt-Windows.ApplicationModel.Core==2.2.0
-winrt-Windows.Data.Xml.Dom==2.2.0
-winrt-Windows.Foundation==2.2.0
-winrt-Windows.Foundation.Collections==2.2.0
-winrt-Windows.Foundation.Interop==2.2.0
-winrt-Windows.UI.Notifications==2.2.0
