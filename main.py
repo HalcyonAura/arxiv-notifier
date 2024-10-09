@@ -1,3 +1,4 @@
+from urllib.parse import quote
 import asyncio
 import feedparser
 import platform
@@ -12,17 +13,16 @@ if platform.system() == "Darwin":
 
     asyncio.set_event_loop_policy(EventLoopPolicy())
 
-def fetch_arxiv_articles(search_query, max_results=1):
-    """Fetch Arxiv articles based on the search query."""
-    base_url = 'http://export.arxiv.org/api/query?'
-    query = f'search_query={search_query}&start=0&max_results={max_results}&sortBy=submittedDate&sortOrder=descending'
+def get_papers(topic, start, max_results):
+    """ Get papers from arXiv based on query. """
+    feed_url = f"http://export.arxiv.org/api/query?search_query=all:{topic}&start={start}&max_results={max_results}&sortBy=lastUpdatedDate&sortOrder=descending"
     try:
-        feed = feedparser.parse(base_url + query)
+        feed = feedparser.parse(feed_url)
+        entries = [{'id': entry.id, 'title': entry.title} for entry in feed.entries]
+        return entries
     except Exception as e:
-        print(f"Error fetching Arxiv articles: {e}")
-        return None    
-    entries = [{'id': entry.id, 'title': entry.title, 'summary': entry.summary, 'link': entry.link} for entry in feed.entries]
-    return entries
+        print(f"Error: {e}")
+        return []
 
 async def wait_until_time(hour=9, minute=0, second=0):
     """Wait until a specific time of the day."""
@@ -39,23 +39,19 @@ async def wait_until_time(hour=9, minute=0, second=0):
     print(f"Waiting {time_to_wait / 3600:.2f} hours until [time]...")
     await asyncio.sleep(time_to_wait)
 
-async def check_and_notify(hour, minute) -> None:
+async def check_and_notify(topic, start = 0, max_results = 5, hour = 9, minute = 0, second = 0):
     """Check for new articles and notify"""
-    notifier = DesktopNotifier(app_name="Sample App")
+    notifier = DesktopNotifier(app_name="arXiv Notifier")
     stop_event = asyncio.Event()
 
-    await wait_until_time(hour,minute)  # Wait until [time] before proceeding
-     # Function to check and notify new articles
-    articles = fetch_arxiv_articles('hackathons')
-    #articles = [{'id': '1', 'title': 'Hackathons', 'summary': 'Hackathons are fun', 'link': 'https://arxiv.org'}] # sample article while waiting for enough time to pass due to arxiv query rates
-
+    await wait_until_time(hour, minute, second)  # Wait until [time] before proceeding
+    articles = get_papers(topic, start, max_results)
     for article in articles:
         await notifier.send(
-            title="New Arxiv Article on Hackathons",
-            message=f"Title: {article['title']}\nLink: {article['link']}",
+            title=f"Title: {article['title']}",
+            message=f"Link: {article['id']}",
             urgency=Urgency.Normal,
-            on_clicked=lambda: (webbrowser.open_new_tab(article['link'])),
-            on_dismissed=lambda: print("Notification dismissed"),
+            on_clicked=lambda: (webbrowser.open_new_tab(article['id'])),
             sound=DEFAULT_SOUND,
         )
 
@@ -75,8 +71,13 @@ async def check_and_notify(hour, minute) -> None:
 
 
 if __name__ == "__main__":
+    # do param security checks
+    topic = quote("machine learning")
+    hour = 17
+    minute = 30
+    second = 0
     try:
-        asyncio.run(check_and_notify(14, 28))
+        asyncio.run(check_and_notify(topic, hour, minute, second))
     except KeyboardInterrupt:
-        # Handle KeyboardInterrupt gracefully on Windows.
+        # Handle KeyboardInterrupt gracefully on Windows
         pass
